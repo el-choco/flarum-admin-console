@@ -1,0 +1,20 @@
+.AdminConsole {
+  max-width: 1040px;
+  padding: 28px 24px;
+  margin: 0 auto;
+  &-header { padding-bottom: 20px; h2 { margin: 8px 0; font-size: 28px; } p { color: var(--muted-color, #66788a); } }
+  &-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--muted-color, #66788a); }
+  &-badges { display: flex; gap: 8px; flex-wrap: wrap; span { background: var(--control-bg, #eef2f5); color: var(--control-color, #354759); padding: 5px 10px; border-radius: 5px; font-size: 12px; } }
+  &-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+  &-commandPicker { margin-bottom: 24px; border: 1px solid var(--control-bg, #dce3ea); border-radius: 7px; summary { cursor: pointer; padding: 13px 16px; font-weight: 700; background: var(--control-bg, #eef2f5); } }
+  &-pickerBody { padding: 14px; }
+  &-commandList { max-height: 360px; overflow-y: auto; margin-top: 12px; }
+  &-commandOption { width: 100%; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; border: 0; border-bottom: 1px solid var(--control-bg, #eef2f5); background: transparent; color: inherit; padding: 11px 8px; cursor: pointer; &:hover, &:focus-visible { background: var(--control-bg, #eef2f5); } span, small { color: var(--muted-color, #66788a); font-size: 12px; } }
+  &-form label { display: block; font-weight: 700; margin-bottom: 8px; }
+  &-inputRow { display: flex; gap: 10px; .FormControl { flex: 1; min-width: 0; font-family: monospace; } }
+  &-terminalHeader { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding: 10px 16px; background: #233242; color: #edf3f8; border-radius: 8px 8px 0 0; .Button { margin-left: auto; color: #b8e8d2; } }
+  &-output { background: #101b26; color: #c8f5df; padding: 20px; min-height: 240px; max-height: 520px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; border: 0; border-radius: 0 0 8px 8px; font: 13px/1.65 Consolas, monospace; }
+  &-historyItem { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--control-bg, #eef2f5); code { flex: 1; min-width: 180px; overflow-wrap: anywhere; } span { font-size: 12px; color: var(--muted-color, #66788a); } }
+  .helpText { margin-top: 10px; }
+}
+@media (max-width: 600px) { .AdminConsole { padding: 16px 10px; &-inputRow { flex-direction: column; } } }

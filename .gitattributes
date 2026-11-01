@@ -1,0 +1,3 @@
+/node_modules export-ignore
+/js/node_modules export-ignore
+/vendor export-ignore

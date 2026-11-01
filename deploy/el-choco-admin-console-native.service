@@ -1,0 +1,17 @@
+[Unit]
+Description=el-choco Admin Console worker (native Flarum)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/flarum
+ExecStart=/usr/bin/php /var/www/flarum/vendor/el-choco/admin-console/bin/worker.php --base=/var/www/flarum --watch
+ExecStop=/usr/bin/php /var/www/flarum/vendor/el-choco/admin-console/bin/worker.php --base=/var/www/flarum --stop
+Restart=always
+RestartSec=5
+TimeoutStopSec=infinity
+
+[Install]
+WantedBy=multi-user.target

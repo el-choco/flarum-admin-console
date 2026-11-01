@@ -1,0 +1,56 @@
+{
+  "name": "el-choco/admin-console",
+  "description": "Administrator command console for Flarum 1.8 and 2.x",
+  "type": "flarum-extension",
+  "license": "MIT",
+  "replace": {
+    "franc/admin-console": "*"
+  },
+  "archive": {
+    "exclude": [
+      "/node_modules",
+      "/js/node_modules",
+      "/vendor",
+      "/*.zip"
+    ]
+  },
+  "require": {
+    "php": ">=7.4",
+    "flarum/core": "^1.8 || ^2.0",
+    "symfony/process": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "ElChoco\\AdminConsole\\": "src/"
+    }
+  },
+  "extra": {
+    "flarum-extension": {
+      "title": "Admin Console",
+      "icon": {
+        "name": "fas fa-terminal",
+        "backgroundColor": "#182837",
+        "color": "#74e3b2"
+      }
+    }
+  },
+  "keywords": [
+    "flarum",
+    "admin",
+    "console",
+    "composer",
+    "maintenance"
+  ],
+  "authors": [
+    {
+      "name": "el-choco",
+      "role": "Developer"
+    }
+  ],
+  "homepage": "https://github.com/el-choco/flarum-admin-console",
+  "support": {
+    "issues": "https://github.com/el-choco/flarum-admin-console/issues",
+    "source": "https://github.com/el-choco/flarum-admin-console",
+    "docs": "https://github.com/el-choco/flarum-admin-console/blob/main/INSTALL.md"
+  }
+}

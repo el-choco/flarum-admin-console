@@ -1,0 +1,52 @@
+name: Admin Console
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flarum: ['1.8.21', '2.0.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, gd, fileinfo, pdo_mysql
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install actual core in isolated test directory
+        env:
+          CORE_VERSION: ${{ matrix.flarum }}
+        run: |
+          mkdir -p /tmp/console-flarum
+          php -r '$config=["allow-plugins"=>false]; if (getenv("CORE_VERSION")==="1.8.21") { $config["audit"]["ignore"]=["PKSA-w9tt-7782-78jx"=>"Isolated legacy-core compatibility test only; see TEST-REPORT.md"]; } file_put_contents("/tmp/console-flarum/composer.json", json_encode(["repositories"=>[["type"=>"path","url"=>getcwd(),"options"=>["symlink"=>true]]],"require"=>["flarum/core"=>getenv("CORE_VERSION"),"el-choco/admin-console"=>"*@dev"],"config"=>$config]));'
+          composer install -d /tmp/console-flarum --no-interaction --no-scripts --no-plugins --prefer-dist
+      - run: npm ci --ignore-scripts && npm --prefix js ci --ignore-scripts && npm --prefix js run build
+      - name: Unit, compiled frontend, original core authorization and CLI lifecycle
+        run: |
+          php tests/policy.php
+          php tests/snapshot.php
+          php tests/assets.php
+          php tests/runtime.php
+          npm test
+          php tests/security-integration.php /tmp/console-flarum/vendor/autoload.php
+          php tests/jobs.php /tmp/console-flarum/vendor/autoload.php
+          php tests/watch.php /tmp/console-flarum/vendor/autoload.php
+          php tests/worker-cli.php /tmp/console-flarum/vendor/autoload.php
+          if [ "$CORE_VERSION" = "2.0.2" ]; then php tests/long-job.php /tmp/console-flarum/vendor/autoload.php 185; fi
+        env:
+          CORE_VERSION: ${{ matrix.flarum }}
+  crazymax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run original core, queue and CLI tests in target image as non-root
+        run: |
+          docker pull crazymax/flarum:2.0.2
+          for test in security-integration jobs watch worker-cli; do
+            docker run --rm --user 1000:1000 --network none --mount type=bind,source="$PWD",target=/package,readonly --entrypoint php crazymax/flarum:2.0.2 "/package/tests/$test.php" /opt/flarum/vendor/autoload.php
+          done
