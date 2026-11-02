@@ -3,18 +3,22 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
+const { makeTranslator, translations } = require('./locale-helper.cjs');
 
 function create(version, options = {}) {
   let Page;
   const requests = [], initializers = [], beforeMount = [];
   const registry = { for: (id) => { assert.equal(id, 'el-choco-admin-console'); return registry; }, registerPage: (value) => { Page = value; } };
+  const translator = makeTranslator(options.locale || 'de', options.asArray !== false);
   const app = {
+    translator,
     forum: { attribute: () => '/api' },
     request: async (request) => {
       requests.push(request);
       if (request.url.endsWith('?summary=1') && options.summaryWait) return options.summaryWait;
       if (request.method === 'GET' && request.url.includes('?job=')) {
         if (options.pollError) throw new Error('network offline');
+        if (options.apiError) throw { response: options.apiError };
         const command = (requests.filter(r => r.method === 'POST').slice(-1)[0] || { body: { command: options.resumeCommand || 'info' } }).body.command;
         const phase = options.phases && options.phases.length ? options.phases.shift() : 'succeeded';
         return { id: 'a'.repeat(32), command, status: phase, output: '<script>example</script>', exitCode: 0, seconds: 1, backup: 'test-backup', ...(options.result || {}) };
@@ -65,7 +69,7 @@ function create(version, options = {}) {
   initializers.forEach(fn => fn(app));
   beforeMount.forEach(fn => fn());
   assert.ok(Page, 'Custom page must be registered');
-  return { page: new Page(), requests, window, exported: context.module.exports };
+  return { page: new Page(), requests, window, app, exported: context.module.exports };
 }
 
 for (const version of [1, 2]) {
@@ -184,5 +188,59 @@ for (const version of [1, 2]) {
     release({ status: 500, ok: false, redirected: false, text: async () => '' });
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(page.output, output); assert.equal(page.error, '');
+  });
+}
+
+for (const version of [1, 2]) {
+  for (const language of ['en', 'de', 'es']) {
+    test(`Flarum ${version}: ${language} translates controls, status and messages without changing raw output`, async () => {
+      const { page, window } = create(version, { locale: language, asArray: version === 1 });
+      page.oninit({}); await page.loadStatus();
+      const strings = translations(language);
+      assert.equal(page.output, strings['el-choco-admin-console.admin.ready']);
+      assert.equal(page.statusLabel('succeeded'), strings['el-choco-admin-console.admin.status_succeeded']);
+      const tree = JSON.stringify(page.content());
+      assert.ok(tree.includes(strings['el-choco-admin-console.admin.execute']));
+      assert.ok(!tree.includes('el-choco-admin-console.admin.'));
+      assert.ok(tree.includes('<extension-id>'));
+      let confirmation;
+      window.confirm = text => { confirmation = text; return true; };
+      page.command = 'composer require vendor/package:^2.0'; await page.run();
+      assert.ok(confirmation.includes(page.command));
+      assert.ok(!confirmation.includes('{command}'));
+      assert.ok(page.output.startsWith('<script>example</script>'));
+      assert.ok(!page.output.includes('[object Object]'));
+      const before = page.output;
+      assert.equal(page.command, 'composer require vendor/package:^2.0');
+      assert.ok(before.includes('test-backup'));
+    });
+    test(`Flarum ${version}: ${language} localizes structured backend errors and retained worker diagnostics`, async () => {
+      const key = 'el-choco-admin-console.admin.error_uid_mismatch';
+      const { page } = create(version, { locale: language, result: { status: 'failed', exitCode: null, diagnostic: { message: 'English CLI fallback', translationKey: key, translationParameters: {} } } });
+      page.oninit({}); await page.loadStatus(); await page.run();
+      assert.ok(page.output.includes(translations(language)[key]));
+      assert.ok(!page.output.includes('English CLI fallback'));
+      assert.ok(!page.output.includes('el-choco-admin-console.admin.'));
+      assert.equal(page.message({ response: { message: 'English CLI fallback', translationKey: key } }), translations(language)[key]);
+    });
+  }
+  test(`Flarum ${version}: unsupported language falls back to English and locale changes are respected`, async () => {
+    const { page, app } = create(version, { locale: 'fr-FR' });
+    page.oninit({}); await page.loadStatus();
+    assert.equal(page.statusLabel('succeeded'), 'Completed');
+    app.translator.setLocale('es');
+    assert.equal(page.statusLabel('succeeded'), 'Finalizada');
+    const raw = 'PHP Warning: sample <script>x</script>';
+    assert.equal(page.message({ response: { message: raw } }), raw);
+  });
+}
+
+for (const version of [1, 2]) {
+  test(`Flarum ${version}: unknown diagnostic keys retain the English fallback during mixed-version upgrades`, async () => {
+    const { page, app } = create(version);
+    page.oninit({}); await page.loadStatus();
+    const original = app.translator.trans;
+    app.translator.trans = (key, parameters) => key.endsWith('.future_error') ? key : original(key, parameters);
+    assert.equal(page.message({ response: { translationKey: 'el-choco-admin-console.admin.future_error', message: 'New server message' } }), 'New server message');
   });
 }

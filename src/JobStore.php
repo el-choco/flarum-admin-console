@@ -2,7 +2,8 @@
 
 namespace ElChoco\AdminConsole;
 
-use RuntimeException;
+require_once __DIR__.'/ConsoleMessage.php';
+
 
 final class JobStore
 {
@@ -12,9 +13,9 @@ final class JobStore
     {
         $this->folder = $storage.'/admin-console';
         foreach ([$this->folder, $this->folder.'/jobs'] as $dir) {
-            if (is_link($dir)) { throw new RuntimeException('Konsolenordner darf kein symbolischer Link sein.'); }
+            if (is_link($dir)) { throw new ConsoleMessage('error_folder_symlink', 'The console directory must not be a symbolic link.'); }
             if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
-                throw new RuntimeException('Konsolenordner ist nicht beschreibbar.');
+                throw new ConsoleMessage('error_folder_unwritable', 'The console directory is not writable.');
             }
             @chmod($dir, 0700);
         }
@@ -24,11 +25,11 @@ final class JobStore
 
     public function lock(string $name, bool $blocking = false)
     {
-        if (!in_array($name, ['queue', 'worker'], true)) { throw new RuntimeException('Ungültige Sperre.'); }
+        if (!in_array($name, ['queue', 'worker'], true)) { throw new ConsoleMessage('error_lock_invalid', 'Invalid lock.'); }
         $file = $this->folder.'/'.$name.'.lock';
-        if (is_link($file)) { throw new RuntimeException('Ungültige Sperrdatei.'); }
+        if (is_link($file)) { throw new ConsoleMessage('error_lock_file_invalid', 'Invalid lock file.'); }
         $handle = @fopen($file, 'c');
-        if (!$handle) { throw new RuntimeException('Sperrdatei kann nicht geöffnet werden.'); }
+        if (!$handle) { throw new ConsoleMessage('error_lock_open', 'The lock file cannot be opened.'); }
         @chmod($file, 0600);
         if (!flock($handle, LOCK_EX | ($blocking ? 0 : LOCK_NB))) { fclose($handle); return null; }
         return $handle;
@@ -36,21 +37,21 @@ final class JobStore
 
     public function enqueue(string $command, string $actor, int $uid, string $requestId): array
     {
-        if (!preg_match('/^[a-f0-9]{32}$/D', $requestId)) { throw new RuntimeException('Ungültige Auftragskennung.'); }
+        if (!preg_match('/^[a-f0-9]{32}$/D', $requestId)) { throw new ConsoleMessage('error_job_id_invalid', 'Invalid job ID.'); }
         $lock = $this->lock('queue', true);
         try {
             // Retrying a POST after a lost response must never run Composer twice.
             $existing = $this->read($requestId);
             if ($existing) {
                 if ($existing['command'] !== $command || $existing['actor'] !== $actor) {
-                    throw new RuntimeException('Auftragskennung ist bereits vergeben.');
+                    throw new ConsoleMessage('error_job_id_used', 'This job ID is already in use.');
                 }
                 if ($existing['status'] === 'queued') { $this->atomic($this->folder.'/pending.json', ['id' => $existing['id']]); }
                 return $existing;
             }
             foreach ($this->all() as $job) {
                 if (in_array($job['status'], ['queued', 'running', 'interrupted'], true)) {
-                    throw new RuntimeException('Es gibt bereits einen offenen Auftrag. Status prüfen; unterbrochene Aufträge zuerst im Terminal klären.');
+                    throw new ConsoleMessage('error_queue_busy', 'A job is already open. Check its status; resolve interrupted jobs in the terminal first.');
                 }
             }
             $job = ['id' => $requestId, 'command' => $command, 'actor' => $actor, 'uid' => $uid,
@@ -65,21 +66,21 @@ final class JobStore
 
     public function read(string $id): ?array
     {
-        if (!preg_match('/^[a-f0-9]{32}$/D', $id)) { throw new RuntimeException('Ungültige Auftragskennung.'); }
+        if (!preg_match('/^[a-f0-9]{32}$/D', $id)) { throw new ConsoleMessage('error_job_id_invalid', 'Invalid job ID.'); }
         $file = $this->folder.'/jobs/'.$id.'.json';
         if (!is_file($file)) { return null; }
-        if (is_link($file)) { throw new RuntimeException('Ungültige Auftragsdatei.'); }
+        if (is_link($file)) { throw new ConsoleMessage('error_job_file_invalid', 'Invalid job file.'); }
         $contents = @file_get_contents($file);
         if ($contents === false && !is_file($file)) { return null; }
         $data = json_decode((string) $contents, true);
-        if (!is_array($data) || ($data['id'] ?? null) !== $id) { throw new RuntimeException('Auftragsdatei ist beschädigt. Keine automatische Wiederholung.'); }
+        if (!is_array($data) || ($data['id'] ?? null) !== $id) { throw new ConsoleMessage('error_job_corrupt', 'The job file is damaged. No automatic retry.'); }
         return $data;
     }
 
     public function save(array $job): void
     {
         $id = $job['id'];
-        if (!preg_match('/^[a-f0-9]{32}$/D', $id)) { throw new RuntimeException('Ungültige Auftragskennung.'); }
+        if (!preg_match('/^[a-f0-9]{32}$/D', $id)) { throw new ConsoleMessage('error_job_id_invalid', 'Invalid job ID.'); }
         $this->atomic($this->folder.'/jobs/'.$id.'.json', $job);
     }
 
@@ -88,7 +89,7 @@ final class JobStore
     {
         $file = $this->folder.'/pending.json';
         if (!is_file($file)) { return ''; }
-        if (is_link($file)) { throw new RuntimeException('Ungültiges Auftragssignal.'); }
+        if (is_link($file)) { throw new ConsoleMessage('error_signal_invalid', 'Invalid job signal.'); }
         return (string) file_get_contents($file);
     }
     public function requestStop(): void { $this->atomic($this->folder.'/stop.json', ['time' => microtime(true)]); }
@@ -131,28 +132,28 @@ final class JobStore
         foreach ($this->all() as $i => $job) {
             if (in_array($job['status'], ['succeeded', 'failed', 'acknowledged'], true) &&
                 ($i >= 100 || strtotime($job['finishedAt'] ?? $job['time']) < time() - 7 * 86400)) {
-                if (!@unlink($this->folder.'/jobs/'.$job['id'].'.json')) { throw new RuntimeException('Abgelaufene Auftragsausgabe konnte nicht gelöscht werden.'); }
+                if (!@unlink($this->folder.'/jobs/'.$job['id'].'.json')) { throw new ConsoleMessage('error_cleanup_failed', 'Expired job output could not be deleted.'); }
             }
         }
     }
 
     private function atomic(string $file, array $data): void
     {
-        if (is_link($file)) { throw new RuntimeException('Symbolischer Link als Zieldatei verweigert.'); }
+        if (is_link($file)) { throw new ConsoleMessage('error_target_symlink', 'A symbolic link cannot be used as the target file.'); }
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
         $tmp = $file.'.'.bin2hex(random_bytes(6)).'.tmp';
         $handle = @fopen($tmp, 'x');
-        if (!$handle) { throw new RuntimeException('Statusdatei kann nicht angelegt werden.'); }
+        if (!$handle) { throw new ConsoleMessage('error_state_create', 'The status file cannot be created.'); }
         @chmod($tmp, 0600);
         try {
             $offset = 0;
             while ($offset < strlen($json)) {
                 $written = fwrite($handle, substr($json, $offset));
-                if (!$written) { throw new RuntimeException('Statusdatei konnte nicht vollständig geschrieben werden.'); }
+                if (!$written) { throw new ConsoleMessage('error_state_write', 'The status file could not be written completely.'); }
                 $offset += $written;
             }
             fflush($handle);
         } finally { fclose($handle); }
-        if (!@rename($tmp, $file)) { @unlink($tmp); throw new RuntimeException('Statusdatei kann nicht atomar ersetzt werden.'); }
+        if (!@rename($tmp, $file)) { @unlink($tmp); throw new ConsoleMessage('error_state_replace', 'The status file cannot be replaced atomically.'); }
     }
 }

@@ -14,16 +14,16 @@ Admin Console bringt eine Befehlsoberfläche in deinen Flarum-Adminbereich. Fueh
 
 ## Stand und Kompatibilität
 
-Erster öffentlicher Release Candidate: `0.2.0-rc.3`.
+Aktueller Release Candidate: `0.2.0-rc.4`.
 
-Die Erweiterung ist für Flarum 1.8 und 2.x vorgesehen. Automatisierte Prüfungen verwenden die echten Abhaengigkeiten von Flarum 1.8.21 und 2.0.2. Praxistests erfolgten mit Flarum 2 im CrazyMax-Container. Der vollständige Praxistest einer nativen Flarum-1.8-Installation steht noch aus. Die Oberfläche ist derzeit auf Deutsch.
+Die Erweiterung ist für Flarum 1.8 und 2.x vorgesehen. Automatisierte Prüfungen verwenden die echten Abhängigkeiten von Flarum 1.8.21 und 2.0.2. Praxistests erfolgten mit Flarum 2 im CrazyMax-Container und Flarum 1.8.20 ohne Docker mit PHP 8.4.24. Unter Flarum 1.8.20 wurden die Installation von Packagist, Aktivierung, Worker-Ausführung sowie `info`, `cache:clear` und `composer show` bestätigt. Die Adminseite blieb nach dem Leeren des Caches erreichbar. Die Installation und Entfernung von Composer-Paketen über die Console wurde auf der nativen 1.8-Installation noch nicht geprüft. Die Oberfläche ist auf Englisch, Deutsch und Spanisch verfügbar und folgt Flarums gewählter Anzeigesprache. Originalausgaben der Unterprozesse werden nicht übersetzt.
 
 ## Installation
 
 Nach Veröffentlichung auf Packagist im Flarum-Verzeichnis als normaler Installationsbenutzer:
 
 ```bash
-composer require el-choco/admin-console:"0.2.0-rc.3"
+composer require el-choco/admin-console:"0.2.0-rc.4"
 php flarum extension:enable el-choco-admin-console
 php flarum cache:clear
 ```

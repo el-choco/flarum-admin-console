@@ -15,4 +15,5 @@ return [
     (new Extend\Routes('api'))
         ->get('/admin-console', 'elchoco.admin-console.status', ConsoleController::class)
         ->post('/admin-console', 'elchoco.admin-console.run', ConsoleController::class),
+    new Extend\Locales(__DIR__.'/locale'),
 ];

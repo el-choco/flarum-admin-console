@@ -1,6 +1,8 @@
 <?php
 namespace ElChoco\AdminConsole;
 
+require_once __DIR__.'/ConsoleMessage.php';
+
 use Flarum\Foundation\Paths;
 use Flarum\Http\RequestUtil;
 use Laminas\Diactoros\Response\JsonResponse;
@@ -19,15 +21,15 @@ class ConsoleController implements RequestHandlerInterface
         $actor = RequestUtil::getActor($request);
         $actor->assertPermission($actor->isAdmin());
         $actor->assertAdmin();
-        if (!in_array($request->getMethod(), ['GET', 'POST'], true)) { return $this->respond(['message' => 'Methode nicht erlaubt.'], 405); }
+        if (!in_array($request->getMethod(), ['GET', 'POST'], true)) { return $this->respond(ConsoleMessage::payload(new ConsoleMessage('error_method', 'Method not allowed.')), 405); }
         try { $store = new JobStore($this->paths->storage); }
-        catch (Throwable $e) { return $this->respond(['message' => $e->getMessage()], 503); }
+        catch (Throwable $e) { return $this->respond(ConsoleMessage::payload($e), 503); }
         if ($request->getMethod() === 'GET') {
             $query = $request->getQueryParams();
             if (isset($query['job'])) {
                 try { $job = is_string($query['job']) ? $store->read($query['job']) : null; }
-                catch (Throwable $e) { return $this->respond(['message' => $e->getMessage()], 422); }
-                if (!$job) { return $this->respond(['message' => 'Auftrag nicht gefunden.'], 404); }
+                catch (Throwable $e) { return $this->respond(ConsoleMessage::payload($e), 422); }
+                if (!$job) { return $this->respond(ConsoleMessage::payload(new ConsoleMessage('error_job_missing', 'Job not found.')), 404); }
                 if ($job['needsAutoloadRefresh']) { $job['opcache'] = RuntimeDiagnostics::invalidateAutoload($this->paths->base); }
                 return $this->respond($job);
             }
@@ -45,21 +47,21 @@ class ConsoleController implements RequestHandlerInterface
             $helper = is_executable('/usr/local/bin/extension') && is_file('/data/extensions/list');
             return $this->respond(array_merge($catalog, RuntimeDiagnostics::inspect($this->paths->storage, $this->paths->public.'/assets'),
                 ['history' => $store->history(), 'imageHelper' => $helper, 'activeJob' => $active,
-                    'latestJob' => $jobs[0]['id'] ?? null, 'workerSeen' => $store->workerSeen(), 'consoleVersion' => '0.2.0-rc.3']));
+                    'latestJob' => $jobs[0]['id'] ?? null, 'workerSeen' => $store->workerSeen(), 'consoleVersion' => '0.2.0-rc.4']));
         }
         $body = $request->getParsedBody();
         $command = is_array($body) && is_string($body['command'] ?? null) ? trim($body['command']) : '';
         $helper = is_executable('/usr/local/bin/extension') && is_file('/data/extensions/list');
         try { $plan = CommandPolicy::plan($command, $helper); }
-        catch (\InvalidArgumentException $e) { return $this->respond(['message' => $e->getMessage()], 422); }
+        catch (\InvalidArgumentException $e) { return $this->respond(ConsoleMessage::payload($e), 422); }
         if ($plan['mutates'] && ($body['confirmation'] ?? null) !== $command) {
-            return $this->respond(['message' => 'Änderung muss ausdrücklich bestätigt werden.'], 422);
+            return $this->respond(ConsoleMessage::payload(new ConsoleMessage('error_confirmation', 'Changes must be explicitly confirmed.')), 422);
         }
         $uid = RuntimeDiagnostics::uid();
-        if ($uid === null || $uid === 0) { return $this->respond(['message' => 'Der Web-PHP-Benutzer muss erkennbar sein und darf nicht root sein.'], 503); }
+        if ($uid === null || $uid === 0) { return $this->respond(ConsoleMessage::payload(new ConsoleMessage('error_web_uid', 'The web PHP user must be identifiable and must not be root.')), 503); }
         try {
             $job = $store->enqueue($command, (string) $actor->id, $uid, is_string($body['requestId'] ?? null) ? $body['requestId'] : '');
-        } catch (Throwable $e) { return $this->respond(['message' => $e->getMessage()], 409); }
+        } catch (Throwable $e) { return $this->respond(ConsoleMessage::payload($e), 409); }
         return $this->respond($job, 202);
     }
     private function respond(array $data, int $status = 200): ResponseInterface

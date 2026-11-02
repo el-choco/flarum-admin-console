@@ -68,9 +68,12 @@ verify($response->getStatusCode() === 200, 'Admin reads stored job');
 verify(strpos($response->getHeaderLine('Cache-Control'), 'no-store') !== false, 'Sensitive output is not cached');
 $r = request($admin, 'GET')->withQueryParams(['job' => '../../config.php']);
 verify($csrf->process($r, $controller)->getStatusCode() === 422, 'Job path traversal denied');
+$errorData = json_decode((string) $csrf->process($r, $controller)->getBody(), true);
+verify($errorData['translationKey'] === 'el-choco-admin-console.admin.error_job_id_invalid', 'API provides a translatable error key');
+verify($errorData['message'] === 'Invalid job ID.', 'API retains an English fallback');
 // Both actual versions must load the PHP extenders and select their own JS bundle.
 $extenders = require __DIR__.'/../extend.php';
-verify(count($extenders) === 2, 'Extension loads with real Flarum extenders');
+verify(count($extenders) === 3, 'Extension loads with real Flarum extenders');
 $parser = new Less_Parser();
 $parser->parseFile(__DIR__.'/../less/admin.less');
 verify(strpos($parser->getCss(), '.AdminConsole') !== false, 'Actual installed PHP Less compiler accepts styles');

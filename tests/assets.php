@@ -7,6 +7,7 @@ namespace Composer {
     }
 }
 namespace Flarum\Extend {
+    class Locales { public function __construct($directory) {} }
     class Frontend {
         public string $script = '';
         public function __construct($name) {}

@@ -2,7 +2,7 @@
 
 Run approved Flarum and Composer commands from the administration dashboard.
 
-Package: `el-choco/admin-console` · License: MIT · UI language: German
+Package: `el-choco/admin-console` · License: MIT · UI languages: English, German, Spanish
 
 **Release candidate:** intended for Linux installations running Flarum 1.8 or 2.x, with or without Docker. A separate CLI worker is required. This is not a general-purpose shell or a replacement for server access.
 
@@ -15,6 +15,12 @@ Package: `el-choco/admin-console` · License: MIT · UI language: German
 - View saved output, exit codes, warnings, and recent job history.
 - Run a permanent worker that checks for new jobs approximately every second.
 - Use CrazyMax's extension helper when available, to preserve its extension list.
+
+## Languages
+
+The console uses Flarum's active display language, with bundled English, German, and Spanish resources and Flarum's normal English fallback. Install and enable the corresponding Flarum language pack to make a language available in the forum. Extension translations do not install an entire language pack.
+
+Buttons, confirmations, status labels, application errors, and stored worker diagnostics are translatable. Commands, package names, and original Composer/PHP/Flarum output remain unchanged. Existing rc.3 output is not rewritten. See [docs/TRANSLATING.md](docs/TRANSLATING.md) for translation and Weblate guidance.
 
 ## Requirements
 
@@ -32,7 +38,7 @@ Shared hosting without CLI/background process support is not supported. Docker s
 After this release has been published to Packagist, run in the Flarum directory as the normal installation/PHP user:
 
 ```bash
-composer require el-choco/admin-console:"0.2.0-rc.3"
+composer require el-choco/admin-console:"0.2.0-rc.4"
 php flarum extension:enable el-choco-admin-console
 php flarum cache:clear
 ```

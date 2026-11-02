@@ -1,5 +1,7 @@
 # Veröffentlichung von el-choco/admin-console
 
+Historische Anleitung zur ersten Version (rc.3 ist inzwischen erschienen). Zum naechsten Update siehe [RELEASE-RC4.md](RELEASE-RC4.md).
+
 Repository: https://github.com/el-choco/flarum-admin-console
 
 Paketname auf Packagist: `el-choco/admin-console`. Der Repositoryname darf davon abweichen. Der vorgeschlagene erste öffentliche Tag ist `v0.2.0-rc.3`. Noch nichts davon ist durch die lokale Vorbereitung veröffentlicht worden.
@@ -27,7 +29,7 @@ Alternativ die Dateien über GitHub hochladen. Dabei auch den versteckten Ordner
 
 Auf der Repository-Seite unter **Actions → Admin Console** müssen die beiden Core-Prüfungen und der CrazyMax-Test erfolgreich sein. Diese Linux-/Docker-Prüfungen sind bislang nur vorbereitet. Bei Fehlern zuerst korrigieren; noch kein Release als fertig ankündigen.
 
-Die öffentliche Anleitung für Worker und Installation gegenlesen. Den Screenshot für den Erweiterungsbeitrag ergänzen. Der eigenständige Praxistest auf einer nativen Flarum-1.8-Installation steht noch aus; deshalb zunächst ein öffentlicher Release Candidate.
+Die öffentliche Anleitung für Worker und Installation gegenlesen. Den Screenshot für den Erweiterungsbeitrag ergänzen. Praxistests auf Flarum 1.8.20 ohne Docker haben inzwischen Packagist-Installation, Aktivierung, Worker, `info`, `cache:clear` und `composer show` bestätigt. Paketänderungen über die Console auf dieser Installation sind noch nicht geprüft. Zunächst beim öffentlichen Release Candidate bleiben.
 
 ## 3. Version taggen und Release anlegen
 

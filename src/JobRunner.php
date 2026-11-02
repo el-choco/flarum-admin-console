@@ -1,7 +1,8 @@
 <?php
 namespace ElChoco\AdminConsole;
 
-use RuntimeException;
+require_once __DIR__.'/ConsoleMessage.php';
+
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -24,22 +25,22 @@ final class JobRunner
     public function drain(?string $acknowledge = null): void
     {
         $uid = ($this->identity)();
-        if ($uid === null || $uid === 0) { throw new RuntimeException('Worker muss unter dem erkennbaren PHP-Benutzer laufen, niemals als root.'); }
+        if ($uid === null || $uid === 0) { throw new ConsoleMessage('error_worker_uid', 'The worker must run as an identifiable PHP user, never as root.'); }
         $this->store->heartbeat();
         foreach ($this->store->all() as $job) {
             if ($job['status'] === 'running') {
                 $job['status'] = 'interrupted'; $job['finishedAt'] = gmdate('c');
-                $job['output'] .= "\nWorker ohne bestätigten Abschluss beendet. Ein Kindprozess könnte noch laufen. Im Terminal prüfen; keine automatische Wiederholung.";
+                $job['notices'][] = ['translationKey' => 'el-choco-admin-console.admin.worker_lost', 'translationParameters' => [], 'message' => 'The worker ended without confirmed completion. A child process may still be running. Inspect it in the terminal; no automatic retry.'];
                 $this->store->save($job);
             }
         }
         if ($acknowledge !== null) {
             $job = $this->store->read($acknowledge);
-            if (!$job || $job['status'] !== 'interrupted') { throw new RuntimeException('Nur unterbrochene Aufträge können bestätigt werden.'); }
+            if (!$job || $job['status'] !== 'interrupted') { throw new ConsoleMessage('error_acknowledge_invalid', 'Only interrupted jobs can be acknowledged.'); }
             $job['status'] = 'acknowledged'; $job['finishedAt'] = gmdate('c'); $this->store->save($job);
         }
         foreach ($this->store->all() as $job) {
-            if ($job['status'] === 'interrupted') { throw new RuntimeException('Unterbrochener Auftrag '.$job['id'].': erst Prozess- und Paketstatus prüfen, dann --acknowledge verwenden.'); }
+            if ($job['status'] === 'interrupted') { throw new ConsoleMessage('error_interrupted_pending', 'Interrupted job {id}: inspect processes and package state before using --acknowledge.', ['id' => $job['id']]); }
         }
         foreach (array_reverse($this->store->all()) as $job) {
             if ($job['status'] === 'queued') { $this->execute($job, $uid); }
@@ -53,14 +54,14 @@ final class JobRunner
         $helper = is_executable('/usr/local/bin/extension') && is_file('/data/extensions/list');
         $job['status'] = 'running'; $job['startedAt'] = gmdate('c'); $this->store->save($job);
         try {
-            if ($job['uid'] !== $uid) { throw new RuntimeException('Worker-UID stimmt nicht mit dem Web-PHP-Benutzer überein.'); }
+            if ($job['uid'] !== $uid) { throw new ConsoleMessage('error_uid_mismatch', 'The worker UID does not match the web PHP user.'); }
             $plan = CommandPolicy::plan($job['command'], $helper);
             $path = RuntimeDiagnostics::commandPath();
             $binary = $plan['executable'] === 'extension' ? '/usr/local/bin/extension' : (new ExecutableFinder())->find($plan['executable'], null, explode(PATH_SEPARATOR, $path));
-            if (!$binary) { throw new RuntimeException('Programm '.$plan['executable'].' wurde nicht gefunden.'); }
+            if (!$binary) { throw new ConsoleMessage('error_binary_missing', 'Program {program} was not found.', ['program' => $plan['executable']]); }
             if ($plan['executable'] === 'php' && ($plan['args'][1] ?? '') === 'cache:clear') {
                 foreach (RuntimeDiagnostics::inspect($this->storage, $this->assets)['checks'] as $check) {
-                    if (!$check['writable']) { throw new RuntimeException($check['name'].' ist nicht beschreibbar.'); }
+                    if (!$check['writable']) { throw new ConsoleMessage('error_path_unwritable', '{path} is not writable.', ['path' => $check['name']]); }
                 }
             }
             if ($plan['mutates'] && $plan['executable'] !== 'php') {
@@ -92,13 +93,17 @@ final class JobRunner
             $job['status'] = $job['exitCode'] === 0 ? 'succeeded' : 'failed';
             $job['needsAutoloadRefresh'] = $plan['mutates'];
         } catch (Throwable $e) {
-            $job['output'] = substr($job['output']."\n".$e->getMessage(), 0, 262144);
+            if ($e instanceof ConsoleMessage || $e instanceof CommandMessage) {
+                $job['diagnostic'] = ConsoleMessage::payload($e);
+            } else {
+                $job['output'] = substr($job['output']."\n".$e->getMessage(), 0, 262144);
+            }
             $job['status'] = $processStarted ? 'interrupted' : 'failed';
             $job['exitCode'] = null; $job['needsAutoloadRefresh'] = $processStarted;
         }
         $job['seconds'] = round(microtime(true) - $started, 2); $job['finishedAt'] = gmdate('c');
         $job['warnings'] = RuntimeDiagnostics::warnings($job['output']); $job['hasWarnings'] = count($job['warnings']) > 0;
         $this->store->save($job); $this->store->heartbeat();
-        if ($job['status'] === 'interrupted') { throw new RuntimeException('Auftrag unterbrochen; keine weiteren Aufträge starten.'); }
+        if ($job['status'] === 'interrupted') { throw new ConsoleMessage('error_job_interrupted', 'Job interrupted; do not start more jobs.'); }
     }
 }

@@ -38,6 +38,7 @@ $runner->drain($second['id']);
 verify($store->read($second['id'])['status'] === 'acknowledged', 'Manual acknowledgment preserves record');
 $third = $store->enqueue('info', '1', 999, str_repeat('c', 32)); $runner->drain();
 verify($store->read($third['id'])['status'] === 'failed', 'Wrong UID prevents child execution');
+verify($store->read($third['id'])['diagnostic']['translationKey'] === 'el-choco-admin-console.admin.error_uid_mismatch', 'Worker persists a language-neutral diagnostic');
 verify(rejects(function () use ($store, $base) { (new JobRunner($store, $base, $base.'/storage', $base.'/public/assets', function () { return 0; }))->drain(); }), 'Root worker denied');
 verify(rejects(function () use ($store, $base) { (new JobRunner($store, $base, $base.'/storage', $base.'/public/assets', function () { return null; }))->drain(); }), 'Unknown worker UID denied');
 file_put_contents($base.'/flarum', '<?php echo str_repeat("x", 400000); exit(7);');

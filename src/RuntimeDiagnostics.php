@@ -42,7 +42,7 @@ final class RuntimeDiagnostics
         $checks = [];
         foreach ($paths as $label => $path) {
             clearstatcache(true, $path);
-            $checks[] = ['name' => $label, 'writable' => is_dir($path) && is_writable($path)];
+            $checks[] = ['name' => $label, 'translationKey' => 'el-choco-admin-console.admin.check_'.strtolower($label), 'writable' => is_dir($path) && is_writable($path)];
         }
         if (is_dir($storage.'/cache')) {
             try {
@@ -51,12 +51,12 @@ final class RuntimeDiagnostics
                 foreach ($items as $item) {
                     if (++$count > 2000) { break; }
                     if ($item->isDir() && !$item->isLink() && !is_writable($item->getPathname())) {
-                        $checks[] = ['name' => 'Cache-Unterordner '.substr($item->getPathname(), strlen($storage.'/cache/')), 'writable' => false];
+                        $checks[] = ['name' => 'Cache subdirectory '.substr($item->getPathname(), strlen($storage.'/cache/')), 'translationKey' => 'el-choco-admin-console.admin.check_cache_directory', 'translationParameters' => ['path' => substr($item->getPathname(), strlen($storage.'/cache/'))], 'writable' => false];
                         if (count($checks) >= 7) { break; }
                     }
                 }
             } catch (\UnexpectedValueException $e) {
-                $checks[] = ['name' => 'Cache-Verzeichnisbaum (nicht vollständig lesbar)', 'writable' => false];
+                $checks[] = ['name' => 'Cache directory tree (not fully readable)', 'translationKey' => 'el-choco-admin-console.admin.check_cache_tree', 'writable' => false];
             }
         }
         return ['uid' => self::uid(), 'checks' => $checks];
@@ -79,7 +79,7 @@ final class RuntimeDiagnostics
         $report = ['enabled' => $enabled, 'revalidateSeconds' => (int) ini_get('opcache.revalidate_freq'), 'invalidated' => 0, 'failed' => []];
         if (!$enabled) { return $report; }
         if (!function_exists('opcache_invalidate')) {
-            $report['failed'][] = 'opcache_invalidate ist nicht verfügbar.';
+            $report['failed'][] = 'opcache_invalidate is not available.';
             return $report;
         }
         // Run in the web request, not the CLI child: each SAPI has its own cache.

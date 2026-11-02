@@ -34,6 +34,7 @@ jobs:
           php tests/runtime.php
           npm test
           php tests/security-integration.php /tmp/console-flarum/vendor/autoload.php
+          php tests/locales.php /tmp/console-flarum/vendor/autoload.php
           php tests/jobs.php /tmp/console-flarum/vendor/autoload.php
           php tests/watch.php /tmp/console-flarum/vendor/autoload.php
           php tests/worker-cli.php /tmp/console-flarum/vendor/autoload.php
@@ -47,6 +48,6 @@ jobs:
       - name: Run original core, queue and CLI tests in target image as non-root
         run: |
           docker pull crazymax/flarum:2.0.2
-          for test in security-integration jobs watch worker-cli; do
+          for test in security-integration locales jobs watch worker-cli; do
             docker run --rm --user 1000:1000 --network none --mount type=bind,source="$PWD",target=/package,readonly --entrypoint php crazymax/flarum:2.0.2 "/package/tests/$test.php" /opt/flarum/vendor/autoload.php
           done

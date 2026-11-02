@@ -1,4 +1,14 @@
-# Validation report
+# Validation for 0.2.0-rc.4
+
+- 114 entries per language (English/German/Spanish), identical keys and parameter sets.
+- 1,087 locale checks passed with each of actual Flarum 1.8.21 and 2.0.2 dependencies: real YAML loader, ICU validity, Flarum translator, English fallback, and matching CLI fallback text.
+- 42 Node tests passed: compiled Flarum 1/2 frontend bundles, all three languages, text/array translation return values, retained worker diagnostics, original subprocess output, non-blocking status/cache checks, and stylesheet compilation.
+- Policy, snapshot, asset selection, runtime/catalog, actual authorization/CSRF, durable jobs, and watch lifecycle checks passed. A Windows-only atomic rename contention occurred on the first legacy-core watch run; rerunning that test passed (1.19-second first-job completion). The v2 watch run passed on the first attempt (1.21 seconds). No production queue/file-lock behavior was changed to work around this local filesystem issue.
+- PHP syntax checks and strict Composer manifest validation passed.
+- Linux non-root CLI, Docker, and the GitHub workflow for rc.4 have not run locally. The supplied workflow includes the new locale checks. Live browser language switching on the user's installations remains to be confirmed after upgrade.
+- rc.3 practical native and Docker results below are historical; they do not establish a live rc.4 deployment test.
+
+## Historical rc.3 validation
 
 ## Current publication preparation
 
@@ -17,6 +27,6 @@ An earlier rc.1 path package was installed in isolated core fixtures without cor
 
 ## Still requiring target validation
 
-The supplied GitHub Actions workflow has not been run from this workstation. It includes real non-root Linux CLI and CrazyMax container tests. A full native Flarum 1.8 browser/database deployment test, independent clean Packagist install, and worker service setup must still be verified. Tests of middleware objects are not complete browser/session/database end-to-end tests. Do not describe this release as independently security-audited or certified for all production environments.
+The supplied GitHub Actions workflow was not run from this workstation; the maintainer reports completing the GitHub test step. It includes non-root Linux CLI and CrazyMax container tests. Native Flarum 1.8.20 / PHP 8.4.24 testing subsequently confirmed Packagist installation, activation, the separate worker, `info`, `cache:clear` with HTTP 200 admin follow-up, and `composer show el-choco/admin-console`. The Composer output confirms v0.2.0-rc.3 from GitHub commit 82d2b42b73ed4f968bb6e6bad0f8881cb2347d5e under the native vendor path. This was a new package installation in an existing forum, not a completely fresh Flarum deployment. Package installation/removal through the console on native 1.8 remains unverified. Tests of middleware objects are not complete browser/session/database end-to-end tests. Do not describe this release as independently security-audited or certified for all production environments.
 
 The isolated legacy core fixture encountered an existing Flysystem advisory (PKSA-w9tt-7782-78jx). The workflow ignores only that advisory for the compatibility fixture, not the user's production Composer settings. Docker and systemd execution were not available on the local Windows workstation.

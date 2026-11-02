@@ -2,6 +2,8 @@
 
 namespace ElChoco\AdminConsole;
 
+require_once __DIR__.'/ConsoleMessage.php';
+
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -13,17 +15,17 @@ final class CommandCatalog
         try {
             $path = RuntimeDiagnostics::commandPath();
             $binary = (new ExecutableFinder())->find('php', null, explode(PATH_SEPARATOR, $path));
-            if (!$binary) { throw new \RuntimeException('PHP CLI nicht gefunden.'); }
+            if (!$binary) { throw new ConsoleMessage('error_php_missing', 'PHP CLI was not found.'); }
             $process = new Process([$binary, $base.'/flarum', 'list', '--format=json', '--no-interaction', '--no-ansi'], $base, ['PATH' => $path]);
             $process->setTimeout(20);
             $process->run();
             $data = json_decode($process->getOutput(), true);
             if (!$process->isSuccessful() || !is_array($data['commands'] ?? null)) {
-                throw new \RuntimeException('Die Befehlsliste konnte nicht gelesen werden.');
+                throw new ConsoleMessage('error_catalog_unreadable', 'The command catalog could not be read.');
             }
             return ['commands' => self::normalize($data['commands']), 'catalogError' => null, 'version' => (string) ($data['application']['version'] ?? '')];
         } catch (Throwable $e) {
-            return ['commands' => array_map(function ($name) { return ['name' => $name, 'description' => '', 'template' => $name, 'runnable' => $name !== 'help']; }, CommandPolicy::FLARUM_COMMANDS), 'catalogError' => $e->getMessage(), 'version' => ''];
+            return ['commands' => array_map(function ($name) { return ['name' => $name, 'description' => '', 'template' => $name, 'runnable' => $name !== 'help']; }, CommandPolicy::FLARUM_COMMANDS), 'catalogError' => $e->getMessage(), 'catalogDiagnostic' => ConsoleMessage::payload($e), 'version' => ''];
         }
     }
 
