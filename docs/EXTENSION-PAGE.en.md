@@ -14,7 +14,7 @@ Admin Console adds a command interface to Flarum's administration area. Run appr
 
 ## Compatibility and status
 
-Current release candidate: `0.2.0-rc.4`.
+Stable release `0.2.0`.
 
 The package targets Flarum 1.8 and 2.x. Automated checks use actual Flarum 1.8.21 and 2.0.2 dependencies. Practical testing has been performed on a CrazyMax Flarum 2 installation and on native Flarum 1.8.20 with PHP 8.4.24. On Flarum 1.8.20, installation from Packagist, activation, worker execution, `info`, `cache:clear`, and `composer show` have been verified; the admin page remained accessible after cache clearing. Composer package installation/removal through the console has not yet been verified on the native 1.8 deployment. The interface includes English, German, and Spanish translations and follows Flarum's active display language. Original subprocess output is not translated.
 
@@ -23,7 +23,7 @@ The package targets Flarum 1.8 and 2.x. Automated checks use actual Flarum 1.8.2
 After the release is available on Packagist, run in your Flarum directory as the normal installation user:
 
 ```bash
-composer require el-choco/admin-console:"0.2.0-rc.4"
+composer require el-choco/admin-console:"0.2.0"
 php flarum extension:enable el-choco-admin-console
 php flarum cache:clear
 ```

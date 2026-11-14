@@ -8,7 +8,7 @@ Den Inhalt des vorbereiteten ZIPs im Hauptverzeichnis des vorhandenen Repository
 
 Die Änderungen betreffen auch die vorhandenen Veröffentlichungstexte mit den inzwischen bestätigten Flarum-1.8-Tests. Sie wurden lokal erhalten und aktualisiert.
 
-Unter GitHub **Actions** auf erfolgreiche Tests warten. Erst danach über **Releases → Draft a new release** einen neuen Tag `v0.2.0-rc.4` auf `main` erstellen, Titel `Admin Console 0.2.0-rc.4` und **This is a pre-release** auswählen. Als Beschreibung den Inhalt aus `docs/RELEASE.en.md` verwenden. Den bestehenden rc.3-Tag unverändert lassen.
+Unter GitHub **Actions** auf erfolgreiche Tests warten. Erst danach über **Releases → Draft a new release** einen neuen Tag `v0.2.0-rc.4` auf `main` erstellen, Titel `Admin Console 0.2.0-rc.4` und **This is a pre-release** auswählen. Als Beschreibung die damaligen RC4-Release-Notizen verwenden. Den bestehenden rc.3-Tag unverändert lassen.
 
 Der bereits eingerichtete Packagist-Webhook übernimmt den neuen Tag. Prüfen, dass die Version auf der Paketseite erscheint. Kein neuer Webhook erforderlich.
 

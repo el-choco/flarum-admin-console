@@ -4,7 +4,7 @@ Run approved Flarum and Composer commands from the administration dashboard.
 
 Package: `el-choco/admin-console` · License: MIT · UI languages: English, German, Spanish
 
-**Release candidate:** intended for Linux installations running Flarum 1.8 or 2.x, with or without Docker. A separate CLI worker is required. This is not a general-purpose shell or a replacement for server access.
+**Version 0.2.0** supports Flarum 1.8 and 2.x on Linux, including Docker installations. It runs approved commands through a separate CLI worker.
 
 ## Features
 
@@ -35,15 +35,15 @@ Shared hosting without CLI/background process support is not supported. Docker s
 
 ## Installation
 
-After this release has been published to Packagist, run in the Flarum directory as the normal installation/PHP user:
+Run these commands in the Flarum directory as the normal installation/PHP user.
 
 ```bash
-composer require el-choco/admin-console:"0.2.0-rc.4"
+composer require el-choco/admin-console:"0.2.0"
 php flarum extension:enable el-choco-admin-console
 php flarum cache:clear
 ```
 
-This is a prerelease, so use the explicit version. Do not run the maintenance commands as root.
+Run maintenance commands as the forum user.
 
 Next, configure the worker as described in [INSTALL.md](INSTALL.md). Installation alone does not start it. Use `info` as the first test before performing package changes.
 

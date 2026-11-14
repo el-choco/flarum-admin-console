@@ -1,4 +1,11 @@
-# Validation for 0.2.0-rc.4
+# Validation for 0.2.0
+
+- The maintainer confirmed that a targeted extension update succeeded in the running forum using Admin Console RC5.
+- Local checks for the RC5 code covered 35 command policy assertions, 42 frontend and style tests, and locale, authorization, CSRF, and durable-job checks with Flarum 1.8.21 and 2.0.2 dependencies.
+- An offline Composer fixture verified that the named extension updated, the locked core version and root manifest stayed the same, and Composer scripts were skipped.
+- GitHub Actions passed for the RC5 commit, including the Flarum 1.8.21 and 2.0.2 jobs and the CrazyMax image job.
+
+## Historical rc.4 validation
 
 - 114 entries per language (English/German/Spanish), identical keys and parameter sets.
 - 1,087 locale checks passed with each of actual Flarum 1.8.21 and 2.0.2 dependencies: real YAML loader, ICU validity, Flarum translator, English fallback, and matching CLI fallback text.

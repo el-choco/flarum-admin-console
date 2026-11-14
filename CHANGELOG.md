@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-11-14
 
 - Add confirmed, targeted updates with `composer update vendor/package` and a Composer snapshot before execution.
 
-## 0.2.0-rc.4 - prepared for release
+## 0.2.0-rc.4 - 2026-11-02
 
 - Register Flarum locale resources for English, German, and Spanish (114 keys each).
 - Translate console controls, confirmations, statuses, validation errors, and diagnostic labels.
@@ -13,8 +13,6 @@
 - Preserve raw subprocess output and command syntax.
 - Add locale parity, ICU, English fallback, and compiled frontend language checks.
 - Keep the permanent worker, lightweight status refresh, and non-blocking cache checks.
-
-This tag has not yet been published. Stop and restart the worker when updating and reload web PHP if OPcache retains old code.
 
 ## 0.2.0-rc.3 - 2026-11-01
 
