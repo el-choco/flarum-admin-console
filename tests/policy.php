@@ -13,6 +13,17 @@ check(!CommandPolicy::plan('info', false)['mutates'], 'read only');
 check(CommandPolicy::plan('composer remove ernestdefoe/sheaf', true)['executable'] === 'extension', 'image helper');
 check(CommandPolicy::plan('composer require vendor/package:^2.0', false)['args'][1] === 'vendor/package:^2.0', 'version constraint');
 check(!CommandPolicy::plan('composer show vendor/package', false)['mutates'], 'composer show');
+foreach ([false, true] as $imageHelper) {
+    $update = CommandPolicy::plan('composer update vendor/package', $imageHelper);
+    check($update['executable'] === 'composer' && $update['mutates'], 'targeted update uses Composer and requires confirmation');
+    check($update['args'] === ['update', 'vendor/package', '--no-dev', '--no-scripts', '--no-ansi', '--no-interaction', '--no-progress'], 'targeted update uses fixed arguments');
+}
+foreach (['composer update', 'composer update vendor/*', 'composer update vendor/package:*',
+    'composer update vendor/package other/package', 'composer update vendor/package -W',
+    'composer update flarum/core', 'composer update flarum/flarum', 'composer update el-choco/admin-console',
+    'composer update franc/admin-console'] as $command) {
+    check(rejects($command), 'must reject '.$command);
+}
 check(CommandPolicy::plan('help cache:clear', false)['args'][2] === 'cache:clear', 'help');
 foreach (['cache:clear; id', 'cache:clear && id', 'composer remove -- vendor/pkg', 'composer remove flarum/core', 'composer require el-choco/admin-console', 'composer require vendor/pkg:dev-main;id', 'composer require vendor/pkg:^2.0 --ignore-platform-reqs', 'tinker', 'migrate:reset', 'help "x', "info\nwhoami", 'composer require vendor/pkg:$(id)', 'composer remove vendor/pkg:*'] as $command) {
     check(rejects($command), 'must reject '.$command);

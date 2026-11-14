@@ -49,12 +49,19 @@ final class CommandPolicy
                 if (isset($args[2])) { self::package($args[2]); }
                 return ['executable' => 'composer', 'args' => array_merge(array_slice($args, 1), ['--no-ansi', '--no-interaction']), 'mutates' => false];
             }
-            if (!in_array($verb, ['require', 'remove'], true) || count($args) !== 3) {
-                throw new CommandMessage('error_composer_usage', 'Composer: show [package], require package[:version], or remove package.');
+            if (!in_array($verb, ['require', 'remove', 'update'], true) || count($args) !== 3) {
+                throw new CommandMessage('error_composer_usage', 'Composer accepts show [package], require package[:version], remove package, or update package.');
             }
             $name = self::package($args[2], $verb === 'require');
             if (in_array($name, ['el-choco/admin-console', 'franc/admin-console', 'flarum/core', 'flarum/flarum'], true)) {
                 throw new CommandMessage('error_protected_packages', 'The console and Flarum core cannot be changed here.');
+            }
+            if ($verb === 'update') {
+                return [
+                    'executable' => 'composer',
+                    'args' => ['update', $name, '--no-dev', '--no-scripts', '--no-ansi', '--no-interaction', '--no-progress'],
+                    'mutates' => true,
+                ];
             }
             return $imageHelper
                 ? ['executable' => 'extension', 'args' => [$verb, $args[2]], 'mutates' => true]

@@ -101,13 +101,16 @@ for (const version of [1, 2]) {
   test(`Flarum ${version}: confirmed mutation sends command and displays snapshot`, async () => {
     const { page, requests } = create(version);
     page.oninit({}); await page.loadStatus();
-    page.command = 'composer remove vendor/package'; await page.run();
+    page.command = 'composer update vendor/package'; await page.run();
     assert.equal(requests.find(r => r.method === 'POST').body.confirmation, page.command);
     assert.match(page.output, /test-backup/);
   });
   test(`Flarum ${version}: dropdown includes runtime commands and unsupported ones open help`, async () => {
     const { page } = create(version); page.oninit({}); await page.loadStatus();
-    assert.equal(page.commandItems().length, 6);
+    assert.equal(page.commandItems().length, 7);
+    const update = page.commandItems().find(item => item.name === 'composer update');
+    assert.equal(update.template, 'composer update vendor/package');
+    assert.equal(update.runnable, true);
     page.commandFilter = 'Queue';
     const picker = page.commandPicker();
     assert.equal(picker[0], 'details.AdminConsole-commandPicker');

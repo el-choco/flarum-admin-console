@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add confirmed, targeted updates with `composer update vendor/package` and a Composer snapshot before execution.
+
 ## 0.2.0-rc.4 - prepared for release
 
 - Register Flarum locale resources for English, German, and Spanish (114 keys each).

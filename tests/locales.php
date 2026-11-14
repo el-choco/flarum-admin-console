@@ -16,7 +16,7 @@ $resources = [];
 foreach (['en', 'de', 'es'] as $locale) {
     $data = Yaml::parse(file_get_contents(__DIR__.'/../locale/'.$locale.'.yml'));
     $resources[$locale] = $data['el-choco-admin-console']['admin'];
-    verify(count($resources[$locale]) === 114, 'All locale entries loaded by real YAML parser');
+    verify(count($resources[$locale]) === 115, 'All locale entries loaded by real YAML parser');
     verify(array_keys($resources['en']) === array_keys($resources[$locale]), 'Identical keys and ordering');
     foreach ($resources[$locale] as $key => $text) {
         verify(is_string($text) && trim($text) !== '', 'Nonempty translation '.$key);

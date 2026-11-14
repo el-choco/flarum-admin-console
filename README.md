@@ -10,7 +10,7 @@ Package: `el-choco/admin-console` · License: MIT · UI languages: English, Germ
 
 - Select commands from the installed Flarum command catalog, or enter an approved command.
 - Run commands such as `info`, `cache:clear`, `list`, and extension enable/disable actions.
-- Install or remove one Composer package per request, with explicit confirmation.
+- Install, update, or remove one Composer package per request, with explicit confirmation.
 - Execute jobs outside the web request; closing the browser does not cancel them.
 - View saved output, exit codes, warnings, and recent job history.
 - Run a permanent worker that checks for new jobs approximately every second.
@@ -51,7 +51,11 @@ Next, configure the worker as described in [INSTALL.md](INSTALL.md). Installatio
 
 Flarum: `info`, `list`, `help <command>`, `cache:clear`, `assets:publish`, `migrate`, `schedule:list`, `fof:sitemap:build`, and `extension:enable|disable <extension-id>`. A command must also exist in your installation. Other discovered commands provide a help template rather than unrestricted execution.
 
-Composer: `composer show [vendor/package]`, `composer require vendor/package[:version]`, and `composer remove vendor/package`. The console protects its own package and Flarum core from changes through this interface. Arbitrary flags, shell expressions, and command chaining are rejected.
+Composer supports `composer show [vendor/package]`, `composer require vendor/package[:version]`, `composer update vendor/package`, and `composer remove vendor/package`. The console protects its own package and Flarum core from direct changes through this interface. Arbitrary flags, shell expressions, and command chaining are rejected.
+
+For a targeted update, select `composer update` in the command picker, replace `vendor/package` with the package name, and confirm. The worker saves a package snapshot and runs Composer with the constraints already in `composer.json`. An exact version pin must be changed with `composer require vendor/package:version` to install another version. Run project-wide dependency updates from the terminal.
+
+The targeted update requires Composer on the worker's PATH and a `composer.lock`. It skips project Composer scripts. On CrazyMax it uses the configured Composer home, and the persisted extension list keeps its existing constraints. Run `migrate` and `cache:clear` separately when the updated package's instructions call for them.
 
 ## Permissions and recovery
 

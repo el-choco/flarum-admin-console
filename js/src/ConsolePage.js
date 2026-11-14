@@ -127,6 +127,7 @@ export default function createConsolePage(app, ExtensionPage, m) {
       return items.concat([
         { name: 'composer show', template: 'composer show', description: t('composer_show'), runnable: true },
         { name: 'composer require', template: 'composer require vendor/package:*', description: t('composer_require'), runnable: true },
+        { name: 'composer update', template: 'composer update vendor/package', description: t('composer_update'), runnable: true },
         { name: 'composer remove', template: 'composer remove vendor/package', description: t('composer_remove'), runnable: true }
       ]);
     }

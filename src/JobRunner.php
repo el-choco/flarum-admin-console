@@ -72,6 +72,10 @@ final class JobRunner
             if ($plan['executable'] === 'php') { $argv[1] = $this->base.'/flarum'; }
             $env = ['PATH' => $path, 'COMPOSER_NO_INTERACTION' => '1', 'COMPOSER_CACHE_DIR' => $this->store->folder().'/composer-cache', 'TERM' => 'dumb'];
             if ($helper && is_file('/data/extensions/composer-home/config.json')) { $env['COMPOSER_HOME'] = '/data/extensions/composer-home'; }
+            if ($plan['executable'] === 'composer' && $plan['args'][0] === 'update') {
+                $env['COMPOSER_WITH_DEPENDENCIES'] = false;
+                $env['COMPOSER_WITH_ALL_DEPENDENCIES'] = false;
+            }
             $process = new Process($argv, $this->base, $env);
             // CLI outside HTTP: never kill Composer at an arbitrary elapsed time.
             $process->setTimeout(null);
